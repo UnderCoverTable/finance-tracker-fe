@@ -1,3 +1,6 @@
+"use client";
+
+import { Conditional, Then } from "@/components/common/conditional/conditional";
 import {
   MenubarCheckboxItem,
   MenubarContent,
@@ -12,39 +15,42 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger,
-} from "@/components/ui/menubar"
-import * as React from "react"
+} from "@/components/ui/menubar";
+import Link from "next/link";
+import * as React from "react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export type MenuItemType =
   | {
-      type: "item"
-      label: React.ReactNode
-      shortcut?: string
-      disabled?: boolean
-      inset?: boolean
-      onSelect?: () => void
+      type: "item";
+      label: React.ReactNode;
+      shortcut?: string;
+      disabled?: boolean;
+      inset?: boolean;
+      onSelect?: () => void;
     }
   | {
-      type: "checkbox"
-      label: React.ReactNode
-      checked?: boolean
-      onCheckedChange?: (checked: boolean) => void
-      disabled?: boolean
+      type: "checkbox";
+      label: React.ReactNode;
+      checked?: boolean;
+      onCheckedChange?: (checked: boolean) => void;
+      disabled?: boolean;
     }
   | {
-      type: "radio"
-      value: string
-      options: { label: React.ReactNode; value: string }[]
-      onValueChange?: (value: string) => void
+      type: "radio";
+      value: string;
+      options: { label: React.ReactNode; value: string }[];
+      onValueChange?: (value: string) => void;
     }
   | { type: "separator" }
   | { type: "label"; label: React.ReactNode; inset?: boolean }
   | {
-      type: "submenu"
-      label: React.ReactNode
-      items: MenuItemType[]
-      inset?: boolean
-    }
+      type: "submenu";
+      label: React.ReactNode;
+      items: MenuItemType[];
+      inset?: boolean;
+    };
 
 function renderMenuItem(item: MenuItemType, index: number): React.ReactNode {
   switch (item.type) {
@@ -59,7 +65,7 @@ function renderMenuItem(item: MenuItemType, index: number): React.ReactNode {
           {item.label}
           {item.shortcut && <MenubarShortcut>{item.shortcut}</MenubarShortcut>}
         </MenubarItem>
-      )
+      );
     case "checkbox":
       return (
         <MenubarCheckboxItem
@@ -70,7 +76,7 @@ function renderMenuItem(item: MenuItemType, index: number): React.ReactNode {
         >
           {item.label}
         </MenubarCheckboxItem>
-      )
+      );
     case "radio":
       return (
         <MenubarRadioGroup
@@ -84,46 +90,64 @@ function renderMenuItem(item: MenuItemType, index: number): React.ReactNode {
             </MenubarRadioItem>
           ))}
         </MenubarRadioGroup>
-      )
+      );
     case "separator":
-      return <MenubarSeparator key={index} />
+      return <MenubarSeparator key={index} />;
     case "label":
       return (
         <MenubarLabel key={index} inset={item.inset}>
           {item.label}
         </MenubarLabel>
-      )
+      );
     case "submenu":
       return (
         <MenubarSub key={index}>
           <MenubarSubTrigger inset={item.inset}>{item.label}</MenubarSubTrigger>
           <MenubarSubContent>
             {item.items.map((subItem, subIndex) =>
-              renderMenuItem(subItem, subIndex)
+              renderMenuItem(subItem, subIndex),
             )}
           </MenubarSubContent>
         </MenubarSub>
-      )
+      );
     default:
-      return null
+      return null;
   }
 }
 
 export function NavbarMenu({
   trigger,
-  items,
+  submenuItems,
   className,
+  navigateTo,
 }: {
-  trigger: React.ReactNode
-  items: MenuItemType[]
-  className?: string
+  trigger: React.ReactNode;
+  submenuItems: MenuItemType[];
+  className?: string;
+  navigateTo?: string;
 }) {
+  const pathname = usePathname();
+  const isActive = navigateTo && pathname === navigateTo;
+
   return (
     <MenubarMenu>
-      <MenubarTrigger className={className}>{trigger}</MenubarTrigger>
-      <MenubarContent>
-        {items.map((item, index) => renderMenuItem(item, index))}
-      </MenubarContent>
+      <MenubarTrigger
+        className={cn(
+          className,
+          isActive &&
+            "border-l-2 border-emerald-400 text-emerald-400 data-[state=open]:text-emerald-400 focus:text-emerald-400"
+        )}
+      >
+        <Link href={navigateTo || "/"}>{trigger}</Link>
+      </MenubarTrigger>
+
+      <Conditional condition={!!submenuItems?.length}>
+        <Then>
+          <MenubarContent>
+            {submenuItems.map((item, index) => renderMenuItem(item, index))}
+          </MenubarContent>
+        </Then>
+      </Conditional>
     </MenubarMenu>
-  )
+  );
 }
